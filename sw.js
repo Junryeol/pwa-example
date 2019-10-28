@@ -1,4 +1,4 @@
-const cache_version = 'v0.1' // 업데이트시 변경
+const cache_version = 'v0.2' // 업데이트시 변경
 const cache_name = 'github-storage';
 
 console.log(self);
