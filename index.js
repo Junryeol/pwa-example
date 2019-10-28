@@ -14,10 +14,34 @@ setInterval(function() {
 // Register service worker to control making site work offline
 
 if('serviceWorker' in navigator) {
-  navigator.serviceWorker
-           .register('/pwa-example/sw.js')
-           .then(function() { console.log('Service Worker Registered'); });
+  navigator.serviceWorker.register('/pwa-example/sw.js')
+    .then(function() { 
+      console.log('Service Worker Registered');
+    })
+    .catch(function(err) {
+      console.log('Service Worker Register failed: ', err);
+    });
 }
+
+document.querySelector('.register').addEventListener('click', function(event) {
+  event.preventDefault();
+
+  new Promise(function(resolve, reject) {
+    Notification.requestPermission(function(result) {
+      if (result !== 'granted') return reject(Error("Denied notification permission"));
+      resolve();
+    })
+  }).then(function() {
+    return navigator.serviceWorker.ready;
+  }).then(function(reg) {
+    return reg.sync.register('syncTest');
+  }).then(function() {
+    console.log('Sync registered');
+  }).catch(function(err) {
+    console.log('It broke');
+    console.log(err.message);
+  });
+});
 
 // // Code to handle install prompt on desktop
 // let deferredPrompt;

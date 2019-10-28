@@ -1,11 +1,11 @@
 const cache_name = 'github-storage';
-const cache_version = 'v0.2'; // 업데이트시 변경
+const cache_version = 'v0.2'; // NOTE: 업데이트시 변경
 
 const root_directory = '/pwa-example';
 const manifest_file_name = '/manifest.json';
 const service_worker_file_name = '/sw.json';
 
-const static_cache_files = [
+const static_cache_files = [ // TODO: github 에서 목록 끌어오도록 변경
   '/',
   '/index.html',
   '/index.js',
@@ -13,8 +13,8 @@ const static_cache_files = [
   '/icon/fox-icon.png',
   '/images/fox1.jpg',
   '/images/fox2.jpg',
-  //'/images/fox3.jpg',
-  //'/images/fox4.jpg',
+  '/images/fox3.jpg',
+  '/images/fox4.jpg',
 ];
 
 const offline_files = {
@@ -44,10 +44,14 @@ for (let key in offline_files) {
 
 self.addEventListener('install', function(event) {
   event.waitUntil(
-   caches.open(cache_name_with_version).then(function(cache) {
-     return cache.addAll(static_cache_files);
-   })
- );
+    caches.open(cache_name_with_version).then(function(cache) {
+      return cache.addAll(static_cache_files);
+    }).then(function(){
+      console.log('Install succeded');
+    }).catch(function(){
+      console.log('Install failed');
+    })
+  );
 });
 
 self.addEventListener('activate', function(event) {
@@ -72,28 +76,13 @@ self.addEventListener('fetch', function(event) {
   event.respondWith(
     caches.match(event.request)
       .then(function(response) {
-        if (response) {
-          return response;
-        } else {
-          return fetch(event.request.clone())
-            .then(response => {
-              if (response) {
-                caches.open(dynamic_cache_name)
-                  .then(cache => {
-                    cache.put(event.request, response.clone());
-                  });
-              }
-              return response;
-            });  
-        }
+        return response || fetch(e.request); // NOTE: 다이나믹 캐싱 보안 이슈 존재 
       })
-      .catch(error => { // cache fetch 에러 발생시
+      .catch(error => {
         return caches.open(cache_name_with_version)
           .then(cache => {            
-            // 들어온 요청의 Accept 헤더
             let accept_header = event.request.headers.get('accept');
 
-            //Accept 헤더가 text/html 을 포함하고 있다면 (페이지 요청이라면)
             if (accept_header.includes('text/html')) {
               return cache.match(offline_files.html);
             } else if (accept_header.includes('application/json')) {
@@ -106,4 +95,17 @@ self.addEventListener('fetch', function(event) {
           })          
       })
   );
+});
+
+self.addEventListener('sync', function(event) {
+  switch (event.tag) {
+    case 'syncTest':
+      console.log('syncTest syncTest');
+      event.waitUntil(()=>{});
+      break;
+  }
+  self.registration.showNotification("Sync event fired!");  
+  for(let i=0; i<1000; i++){
+    console.log(i)
+  }
 });
