@@ -1,6 +1,5 @@
+const cache_name = 'github-storage';
 const cache_version = 'v0.2'; // 업데이트시 변경
-const static_cache_name = 'github-storage';
-const dynamic_cache_name = '';
 
 const root_directory = '/pwa-example';
 const manifest_file_name = '/manifest.json';
@@ -14,8 +13,8 @@ const static_cache_files = [
   '/icon/fox-icon.png',
   '/images/fox1.jpg',
   '/images/fox2.jpg',
-  '/images/fox3.jpg',
-  '/images/fox4.jpg',
+  //'/images/fox3.jpg',
+  //'/images/fox4.jpg',
 ];
 
 const offline_files = {
@@ -25,7 +24,9 @@ const offline_files = {
   img: '/offline.png',
 }
 
-const cache_name_with_version = static_cache_name+cache_version;
+const static_cache_name = 'static-' + cache_name;
+const dynamic_cache_name = 'dynamic-' + cache_name;
+const cache_name_with_version = static_cache_name + cache_version;
 
 if(static_cache_files.includes(manifest_file_name)){
   static_cache_files.splice(static_cache_files.indexOf(manifest_file_name), 1);
@@ -49,12 +50,42 @@ self.addEventListener('install', function(event) {
  );
 });
 
+self.addEventListener('activate', function(event) {
+  event.waitUntil(
+    caches.keys().then(function(cache_names) {
+      return Promise.all(
+        cache_names.filter(function(name) {
+          if (cache_name_with_version == name)
+            return false;
+          else
+            return true;
+        }).map(function(name) {
+          return caches.delete(name);
+        })
+      );
+    })
+  );
+});
+
 self.addEventListener('fetch', function(event) {
   console.log(event.request.url);
   event.respondWith(
     caches.match(event.request)
       .then(function(response) {
-        return response || fetch(event.request);
+        if (response) {
+          return response;
+        } else {
+          return fetch(event.request.clone())
+            .then(response => {
+              if (response) {
+                caches.open(dynamic_cache_name)
+                  .then(cache => {
+                    cache.put(event.request, response.clone());
+                  });
+              }
+              return response;
+            });  
+        }
       })
       .catch(error => { // cache fetch 에러 발생시
         return caches.open(cache_name_with_version)
@@ -74,22 +105,5 @@ self.addEventListener('fetch', function(event) {
             }
           })          
       })
-  );
-});
-
-self.addEventListener('activate', function(event) {
-  event.waitUntil(
-    caches.keys().then(function(cache_names) {
-      return Promise.all(
-        cache_names.filter(function(name) {
-          if (cache_name_with_version == name)
-            return false;
-          else
-            return true;
-        }).map(function(name) {
-          return caches.delete(name);
-        })
-      );
-    })
   );
 });
