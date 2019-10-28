@@ -1,8 +1,15 @@
+const version = 'v0.1'
+const cachename = 'github-storage'; // 업데이트시 변경
+
+console.log(caches);
+
 self.addEventListener('install', function(e) {
  e.waitUntil(
-   caches.open('video-store').then(function(cache) {
+   caches.open(cachename+version).then(function(cache) {
      return cache.addAll([
        '/pwa-example/',
+       //'/pwa-example/manifest.wmf', // 있으면 업데이트 안됨
+       //'/pwa-example/sw.js', // 있으면 업데이트 안됨
        '/pwa-example/index.html',
        '/pwa-example/index.js',
        '/pwa-example/style.css',
@@ -16,6 +23,7 @@ self.addEventListener('install', function(e) {
 });
 
 self.addEventListener('fetch', function(e) {
+  console.log(e);
   console.log(e.request.url);
   e.respondWith(
     caches.match(e.request).then(function(response) {

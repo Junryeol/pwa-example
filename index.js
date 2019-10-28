@@ -19,13 +19,18 @@ if('serviceWorker' in navigator) {
            .then(function() { console.log('Service Worker Registered'); });
 }
 
-// Code to handle install prompt on desktop
+// // Code to handle install prompt on desktop
+// let deferredPrompt;
+// const addBtn = document.querySelector('.add-button');
+// addBtn.style.display = 'none';
 
-window.addEventListener('appinstalled', function() { 
-  const addBtn = document.querySelector('.add-button');
-  addBtn.style.display = 'none';
-  console.log('Thank you for installing our app!'); 
-});
+// if (!window.matchMedia('(display-mode: standalone)').matches)
+//   console.log('Please install app in your deviece'); 
+
+// window.addEventListener('appinstalled', function() { 
+//   addBtn.style.display = 'none';
+//   console.log('Thank you for installing our app!'); 
+// });
 
 // window.addEventListener('beforeinstallprompt', (e) => {
 //   // Prevent Chrome 67 and earlier from automatically showing the prompt
