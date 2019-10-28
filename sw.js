@@ -104,5 +104,11 @@ self.addEventListener('sync', function(event) {
       event.waitUntil(()=>{});
       break;
   }
-  self.registration.showNotification("Sync event fired!");  
+  setTimeout(function(){
+    self.registration.showNotification("Sync event fired!");  
+  }, 3000);
+});
+
+addEventListener('message', (event) => {
+  console.log(`The client sent me a message: ${event.data}`);
 });
