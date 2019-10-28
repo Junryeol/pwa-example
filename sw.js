@@ -11,7 +11,7 @@ const static_cache_files = [
   '/index.html',
   '/index.js',
   '/style.css',
-  'icon/fox-icon.png',
+  '/icon/fox-icon.png',
   '/images/fox1.jpg',
   '/images/fox2.jpg',
   '/images/fox3.jpg',
