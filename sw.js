@@ -105,7 +105,4 @@ self.addEventListener('sync', function(event) {
       break;
   }
   self.registration.showNotification("Sync event fired!");  
-  for(let i=0; i<1000; i++){
-    console.log(i)
-  }
 });

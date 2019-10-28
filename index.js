@@ -23,6 +23,8 @@ if('serviceWorker' in navigator) {
     });
 }
 
+// indexedDB 응답 확인 방법 필요
+
 document.querySelector('.register').addEventListener('click', function(event) {
   event.preventDefault();
 
