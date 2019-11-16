@@ -1,5 +1,10 @@
+importScript("fs.js");
+importScript("db.js");
+importScript("crypto.js");
+
 const cache_name = 'github-storage';
 const cache_version = 'v0.2'; // NOTE: 업데이트시 변경
+const db_name = 'msg-db';
 
 const root_directory = '/pwa-example';
 const manifest_file_name = '/manifest.json';
@@ -27,6 +32,8 @@ const offline_files = {
 const static_cache_name = 'static-' + cache_name;
 const dynamic_cache_name = 'dynamic-' + cache_name;
 const cache_name_with_version = static_cache_name + cache_version;
+
+const IDXDB = indexedDB(db_name);
 
 if(static_cache_files.includes(manifest_file_name)){
   static_cache_files.splice(static_cache_files.indexOf(manifest_file_name), 1);
@@ -59,7 +66,7 @@ self.addEventListener('activate', function(event) {
     caches.keys().then(function(cache_names) {
       return Promise.all(
         cache_names.filter(function(name) {
-          if (cache_name_with_version == name)
+          if (cache_name_with_version == name || dynamic_cache_name == name)
             return false;
           else
             return true;
@@ -98,15 +105,17 @@ self.addEventListener('fetch', function(event) {
 });
 
 self.addEventListener('sync', function(event) {
-  switch (event.tag) {
+  let argv = JSON.parse(event.tag);
+  let [method, key] = argv;
+  
+  IDXDB
+
+  switch (method) {
     case 'syncTest':
       console.log('syncTest syncTest');
       event.waitUntil(()=>{});
       break;
   }
-  setTimeout(function(){
-    self.registration.showNotification("Sync event fired!");  
-  }, 3000);
 });
 
 addEventListener('message', (event) => {

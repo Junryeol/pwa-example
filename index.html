@@ -3,15 +3,35 @@
   <head>
     <meta charset="utf-8">
     <link rel="icon" href="icon/fox-icon.png">
-    <title>A2HS demo</title>
+    <title>github storage demo</title>
+    <script src="githubAPIadvance.js"></script>
     <link href="style.css" rel="stylesheet">
+    <script src="db.js"></script>
     <script src="index.js" defer></script>
     <link rel="manifest" href="manifest.json">
   </head>
   <body>
-    <img src="images/fox1.jpg" alt="a fox picture">
-    <button class="register">notification</button>
-    <button class="worker-message">worker-message</button>
-    <button class="add-button">Add to home screen</button>
+    <button id="home-add-button">Add to home screen</button>
+
+    <input id="user-id" type="text">
+    <input id="user-pw" type="password">
+    <button id="login-button" onclick="basicAuth()">github login</button>
+
+    <ul id="file-list">
+      
+    </ul>
+
+    <input id="files" type="file" multiple>
+    <button id="upload-button" onclick="upload()">file upload</button>
+
+    <input type="text">
+    <button id="download-button">file download</button>
+
+    <div id="log">
+
+    </div>
+
+    <script src="password.js"></script>
+
   </body>
 </html>

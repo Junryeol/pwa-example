@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset = utf-8" />
+    <script type="text/javascript">
+      window.indexedDB =
+        window.indexedDB ||
+        window.mozIndexedDB ||
+        window.webkitIndexedDB ||
+        window.msIndexedDB;
+
+      //prefixes of window.IDB objects
+      window.IDBTransaction =
+        window.IDBTransaction ||
+        window.webkitIDBTransaction ||
+        window.msIDBTransaction;
+      
+      window.IDBKeyRange =
+        window.IDBKeyRange || 
+        window.webkitIDBKeyRange || 
+        window.msIDBKeyRange;
+
+      if (!window.indexedDB) {
+        console.log("Your browser doesn't support a stable version of IndexedDB.");
+      }
+
+      class IndexedDB {
+        constructor(db_name, object_store_name) {
+          this.db_name = db_name;
+          this.object_store_name = object_store_name;
+
+          let request = window.indexedDB.open(db_name);
+
+          request.onerror = event => {
+            console.log("error: ", event);
+          };
+
+          request.onsuccess = event => {
+              console.log("qqqqqqqq");
+              
+            this.db = request.result;
+          };
+
+          request.onupgradeneeded = event => {
+            console.log("zzzzzzzz");
+            event.target.result.createObjectStore(this.object_store_name);
+          };
+        }
+
+        get(key) {
+          return new Promise((resolve, reject) => {
+            let request = this.db
+              .transaction([this.object_store_name])
+              .objectStore(this.object_store_name)
+              .get(key);
+
+            request.onerror = event => {
+              reject(event);
+            };
+
+            request.onsuccess = event => {
+              resolve(request.result);
+            };
+          });
+        }
+
+        _getAll() {
+          let object_store = this.db
+            .transaction(this.object_store_name)
+            .objectStore(this.object_store_name);
+
+          object_store.openCursor().onsuccess = event => {
+            let cursor = event.target.result;
+
+            if (cursor) {
+              console.log(cursor.key, cursor.value);
+              cursor.continue();
+            } else {
+              console.log("No more entries.");
+            }
+          };
+        }
+
+        put(key, value) {
+          return new Promise((resolve, reject) => {
+            let request = this.db
+              .transaction([this.object_store_name], "readwrite")
+              .objectStore(this.object_store_name)
+              .put(value, key);
+
+            request.onsuccess = event => {
+              resolve(event);
+              console.log("Successful add to database.");
+            };
+
+            request.onerror = event => {
+              reject(event);
+              console.log("Aready exist in database.");
+            };
+          });
+        }
+
+        delete(key) {
+          return new Promise((resolve, reject) => {
+            let request = this.db
+              .transaction([this.object_store_name], "readwrite")
+              .objectStore(this.object_store_name)
+              .delete(key);
+
+            request.onsuccess = event => {
+              resolve(event);
+              console.log("Successful deletion from the database.");
+            };
+
+            request.onerror = event => {
+              reject(event);
+              console.log("Failed to delete from database.");
+            };
+          });
+        }
+      }
+      const indxdb = new IndexedDB("aaaa", "bbbb");
+    </script>
+  </head>
+  <body>
+    <button onclick="indxdb.get('00-03').then((data)=>{console.log(data)})">
+      Read
+    </button>
+    <button onclick="indxdb._getAll()">Read all</button>
+    <button
+      onclick='indxdb.put("00-03","fjhgjkghjgk");'
+    >
+      Add data
+    </button>
+    <button onclick="indxdb.delete('00-03')">Delete data</button>
+  </body>
+</html>

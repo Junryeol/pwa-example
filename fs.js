@@ -1,10 +1,10 @@
 // NOTE: This is only available in Chrome because it uses the file system API.
 
-class temporaryFileSystem {
+class localFileSystem {
   constructor(){
     window.requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;
 
-    if (!this.check()) {
+    if (!window.requestFileSystem) {
       console.log("The FileSystem APIs are not available in your browser.");
     } else {
       navigator.storage.estimate().then((estimate)=>{
@@ -32,9 +32,9 @@ class temporaryFileSystem {
       }, this._error);
     });
   }
-  _open(path, option={}){
+  _open(file_name, option={}){
     return new Promise((resolve)=>{
-      this.cwd.getFile(path, option, (fileEntry)=>{
+      this.cwd.getFile(file_name, option, (fileEntry)=>{
         resolve(fileEntry);
       }, this._error);
     });
@@ -75,10 +75,33 @@ class temporaryFileSystem {
       this._remove(file_name);
     });
   }
-  _check(){
-    return Boolean(window.requestFileSystem);
-  }
   _error(e){
     console.log(e.name);
   }
+}
+
+class memoryFileSystem{
+  constructor(){}
+  _list(){}
+  _remove(file_name){}
+  get(file_name){}
+  put(file_name, file_or_blob){}
+  save(file_name){}
+}
+
+class fileControler {
+  constructor(){
+    if(window.requestFileSystem || window.webkitRequestFileSystem){
+      this.fs = localFileSystem();    
+    } else {
+      this.fs = memoryFileSystem();
+    }
+    files = {};
+  }
+  open(file_name, urls){
+    
+  }
+  save(file_name){}
+  read(file_name){}
+  write(file_name, file_or_blob){}
 }

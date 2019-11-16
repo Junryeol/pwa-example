@@ -1,15 +1,68 @@
-const images = ['fox1','fox2','fox3','fox4'];
-const imgElem = document.querySelector('img');
+const MAX_BYTE = 67108864; // 2^26 64MB
+const github_upload_indexedDB = new IndexedDB("github","upload");
 
-function randomValueFromArray(array) {
-  let randomNo =  Math.floor(Math.random() * array.length);
-  return array[randomNo];
+
+function basicAuth(){
+  let id = document.getElementById('user-id').value;
+  let pw = document.getElementById('user-pw').value;
+
+  github.basicAuth(id, pw).then((data)=>{
+      if (data.type == "User"){
+        github.getRoot().then((data)=>{
+          for(let el of data.tree){
+            document.getElementById('file-list').innerHTML += `<li>${el.path}</li>`
+          }
+        })
+      } else {
+          alert("Worng ID or Password.");
+      }
+  });
 }
 
-setInterval(function() {
-  let randomChoice = randomValueFromArray(images);
-  imgElem.src = 'images/' + randomChoice + '.jpg';
-}, 2000)
+function upload(){
+  let files = document.getElementById('files').files;
+
+  for(let file of files){
+    githubUpload(file);
+    //let indexedDB = new IndexedDB("githubUpload", file.name);
+    //indexedDB._getAll(file.name)
+  }
+}
+
+function githubUpload(file){
+  let read_size = 0;
+
+  while(read_size != file.size){
+    let reader = new FileReader();
+    let indexedDB_ID = file.name+read_size;
+    reader.onloadend = ()=>{
+      console.log(indexedDB_ID)
+      github_upload_indexedDB.put(indexedDB_ID,reader.result);
+    }
+
+    buffer_size = (MAX_BYTE < file.size - read_size ? MAX_BYTE : file.size - read_size);
+    reader.readAsDataURL(file.slice(read_size, read_size + buffer_size)); 
+    read_size += buffer_size;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Register service worker to control making site work offline
 
@@ -24,7 +77,7 @@ if('serviceWorker' in navigator) {
 }
 
 // TODO: indexedDB 기능 추가
-document.querySelector('.register').addEventListener('click', function(event) {
+document.querySelector('#upload-button').addEventListener('click', function(event) {
   event.preventDefault();
 
   new Promise(function(resolve, reject) {
@@ -56,7 +109,7 @@ function handleServiceWorkerActive(registration) {
 
 // Code to handle install prompt on desktop
 let deferredPrompt;
-const addBtn = document.querySelector('.add-button');
+const addBtn = document.querySelector('#home-add-button');
 addBtn.style.display = 'none';
 
 if (!window.matchMedia('(display-mode: standalone)').matches)

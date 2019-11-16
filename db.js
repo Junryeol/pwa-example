@@ -1,64 +1,111 @@
-class indexedDB {
-  constructor(db_name){
-    window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
-    window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
-    window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
+window.indexedDB =
+  window.indexedDB ||
+  window.mozIndexedDB ||
+  window.webkitIndexedDB ||
+  window.msIndexedDB;
 
-    if (!window.indexedDB) {
-        console.log("Your browser doesn't support a stable version of IndexedDB. Such and such feature will not be available.");
-    }
+window.IDBTransaction =
+  window.IDBTransaction ||
+  window.webkitIDBTransaction ||
+  window.msIDBTransaction;
 
+window.IDBKeyRange =
+  window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
+
+if (!window.indexedDB) {
+  console.log("Your browser doesn't support a stable version of IndexedDB.");
+}
+
+class IndexedDB {
+  constructor(db_name, object_store_name) {
     this.db_name = db_name;
+    this.object_store_name = object_store_name;
+
     let request = window.indexedDB.open(db_name);
 
-    request.onerror = (event)=>{console.log(event)};     
-    request.onsuccess = (event)=>{
-        this.db = request.result;
-        this.object_store = {};
+    request.onerror = event => {
+      console.log("error: ", event);
+    };
+
+    request.onsuccess = event => {
+      this.db = request.result;
+      console.log(this.db);
+    };
+
+    request.onupgradeneeded = event => {
+      console.log("sdfsdfsdfs");
+      event.target.result.createObjectStore(this.object_store_name);
     };
   }
-  create(object_store_name){
-    this.object_stores[object_store_name] = this.db.createObjectStore(object_store_name);
-  }
-  get(object_store_name, key){
-    let transaction = db.transaction([object_store_name],"readonly");
-    let objec_store = transaction.objectStore(object_store_name);
-    let request = objec_store.get(key);
-    
-    return new Promise((resolve, reject)=>{
-      request.onerror = (event)=>{
+
+  get(key) {
+    return new Promise((resolve, reject) => {
+      let request = this.db
+        .transaction([this.object_store_name])
+        .objectStore(this.object_store_name)
+        .get(key);
+
+      request.onerror = event => {
         reject(event);
       };
-      request.onsuccess = (event)=>{
+
+      request.onsuccess = event => {
         resolve(request.result);
       };
     });
   }
-  put(object_store_name, key, data){
-    let transaction = db.transaction([object_store_name],"readwrite");
-    let objec_store = transaction.objectStore(object_store_name);
-    let request = objec_store.put(data, key);
 
-    return new Promise((resolve, reject)=>{
-      request.onerror = (event)=>{
-        reject(event);
+  _getAll() {
+    let object_store = this.db
+      .transaction(this.object_store_name)
+      .objectStore(this.object_store_name);
+
+    object_store.openCursor().onsuccess = event => {
+      let cursor = event.target.result;
+
+      if (cursor) {
+        console.log(cursor.key, cursor.value);
+        cursor.continue();
+      } else {
+        console.log("No more entries.");
+      }
+    };
+  }
+
+  put(key, value) {
+    return new Promise((resolve, reject) => {
+      let request = this.db
+        .transaction([this.object_store_name], "readwrite")
+        .objectStore(this.object_store_name)
+        .put(value, key);
+
+      request.onsuccess = event => {
+        resolve(event);
+        console.log("Successful add to database.");
       };
-      request.onsuccess = (event)=>{
-        resolve(request.result);
+
+      request.onerror = event => {
+        reject(event);
+        console.log("Aready exist in database.");
       };
     });
   }
-  delete(object_store_name, key){
-    let transaction = db.transaction([object_store_name],"readwrite");
-    let objec_store = transaction.objectStore(object_store_name);
-    let request = objec_store.delete(key);
 
-    return new Promise((resolve, reject)=>{
-      request.onerror = (event)=>{
-        reject(event);
+  delete(key) {
+    return new Promise((resolve, reject) => {
+      let request = this.db
+        .transaction([this.object_store_name], "readwrite")
+        .objectStore(this.object_store_name)
+        .delete(key);
+
+      request.onsuccess = event => {
+        resolve(event);
+        console.log("Successful deletion from the database.");
       };
-      request.onsuccess = (event)=>{
-        resolve(request.result);
+
+      request.onerror = event => {
+        reject(event);
+        console.log("Failed to delete from database.");
       };
     });
   }
