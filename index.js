@@ -55,6 +55,8 @@ class githubFrontAPI {
 
     return fetch("https://api.github.com/user", { //github/auth
       method: "GET",
+      cache: 'default',
+      mode:'no-cors',
       headers: this.authorization
     }).then(data => {
       this.user_name = data.login;

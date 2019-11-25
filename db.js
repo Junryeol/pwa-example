@@ -33,7 +33,6 @@ class IndexedDB {
     };
 
     request.onupgradeneeded = event => {
-      console.log("sdfsdfsdfs");
       event.target.result.createObjectStore(this.object_store_name);
     };
   }
