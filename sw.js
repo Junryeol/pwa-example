@@ -25,6 +25,7 @@ const static_cache_files = ['/',
 '/github/auth',
 '/style.css',
 '/db.js',
+'/indexedDB.html',
 '/githubAPIadvance.js',
 '/icon/fox-icon.png',
 ]; // TODO: github 에서 목록 끌어오도록 변경
