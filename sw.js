@@ -23,7 +23,7 @@ const static_cache_files = ['/',
 '/index.html',
 '/index.js',
 '/github/auth',
-'/githubAPIadvance.s',
+'/githubAPIadvance.js',
 '/manifest.json',
 '/icon/fox-icon.png',
 ]; // TODO: github 에서 목록 끌어오도록 변경
