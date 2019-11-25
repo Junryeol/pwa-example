@@ -81,27 +81,82 @@ class localFileSystem {
 }
 
 class memoryFileSystem{
-  constructor(){}
-  _list(){}
-  _remove(file_name){}
-  get(file_name){}
-  put(file_name, file_or_blob){}
-  save(file_name){}
+  constructor(){
+    this.files = {};
+  }
+  _list(){
+    return this.files;
+  }
+  _remove(file_name){
+    delete this.files[file_name]
+  }
+  get(file_name){
+    return this.files[file_name];
+  }
+  put(file_name, blob){
+    if (this.files[file_name]){
+      this.files[file_name] = new Blob([this.files[file_name], blob]);
+    } else {
+      this.files[file_name] = new Blob([blob]);
+    }
+  }
+  save(file_name){
+    let link = document.createElement("a");
+    link.download = file_name;
+    link.href = URL.createObjectURL(this.files[file_name]);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 }
 
-class fileControler {
+class githubFileSystem {
   constructor(){
+    const MAX_BYTE = 33554432; // 2^25 32MB
+
     if(window.requestFileSystem || window.webkitRequestFileSystem){
-      this.fs = localFileSystem();    
+      this.fs = new localFileSystem();    
     } else {
-      this.fs = memoryFileSystem();
+      this.fs = new memoryFileSystem();
     }
-    files = {};
   }
-  open(file_name, urls){
-    
+
+  _part_upload(file_part){
+    return new Promise((resolve)=>{
+      let reader = new FileReader();
+      reader.onloadend = ()=>{
+        resolve(github.createBlob(reader.result));
+      }
+      reader.readAsDataURL(file_part); 
+    })
   }
-  save(file_name){}
-  read(file_name){}
-  write(file_name, file_or_blob){}
+
+  async upload(file_name, file){
+    let shas = []
+    let read_size = 0;
+
+    while(read_size != file.size){
+      buffer_size = (MAX_BYTE < file.size - read_size ? MAX_BYTE : file.size - read_size);
+      shas.push(await this._part_upload(file.slice(read_size, read_size + buffer_size)));
+      read_size += buffer_size;
+    }
+
+    return shas;
+  }
+  async download(file_name, shas){
+    if (!this.get(file_name)){
+      await this.put(file_name, shas);
+    }
+    this.fs.save();
+  }
+  async put(file_name, shas){
+    for(let sha of shas){
+      await this.fs.put(file_name, await github.getBlob(sha));
+    }
+  }
+  get(file_name){
+    return this.fs.get(); //createobjecurl
+  }
 }
+
+const github_file_system = new githubFileSystem();
