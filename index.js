@@ -53,7 +53,7 @@ class githubFrontAPI {
     // })
     // })
 
-    fetch("github/auth", { //github/auth
+    fetch("/github/auth", { //github/auth
       method: "GET",
       cache: 'default',
       mode:'cors',
