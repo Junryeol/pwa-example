@@ -1,26 +1,16 @@
-importScript("fs.js");
-importScript("db.js");
-importScript("crypto.js");
+
+//importScripts("./githubAPIadvance.js");
+//importScripts("./fs.js");
+//importScripts("./db.js");
+//importScripts("./crypto.js");
+
 
 const cache_name = 'github-storage';
-const cache_version = 'v0.2'; // NOTE: 업데이트시 변경
-const db_name = 'msg-db';
+const cache_version = 'v0.2';
 
 const root_directory = '/pwa-example';
 const manifest_file_name = '/manifest.json';
 const service_worker_file_name = '/sw.json';
-
-const static_cache_files = [ // TODO: github 에서 목록 끌어오도록 변경
-  '/',
-  '/index.html',
-  '/index.js',
-  '/style.css',
-  '/icon/fox-icon.png',
-  '/images/fox1.jpg',
-  '/images/fox2.jpg',
-  '/images/fox3.jpg',
-  '/images/fox4.jpg',
-];
 
 const offline_files = {
   html: '/offline.html',
@@ -29,11 +19,15 @@ const offline_files = {
   img: '/offline.png',
 }
 
+const static_cache_files = ['/',
+'/index.html',
+'/index.js',
+'/github/auth',
+]; // TODO: github 에서 목록 끌어오도록 변경
+
 const static_cache_name = 'static-' + cache_name;
 const dynamic_cache_name = 'dynamic-' + cache_name;
 const cache_name_with_version = static_cache_name + cache_version;
-
-const IDXDB = indexedDB(db_name);
 
 if(static_cache_files.includes(manifest_file_name)){
   static_cache_files.splice(static_cache_files.indexOf(manifest_file_name), 1);
@@ -49,28 +43,25 @@ for (let key in offline_files) {
   offline_files[key] = root_directory + offline_files[key];
 }
 
-self.addEventListener('install', function(event) {
+self.addEventListener('install', (event) =>{
   event.waitUntil(
-    caches.open(cache_name_with_version).then(function(cache) {
+    caches.open(cache_name_with_version).then((cache) =>{
       return cache.addAll(static_cache_files);
-    }).then(function(){
+    }).then(()=>{
       console.log('Install succeded');
-    }).catch(function(){
+    }).catch(()=>{
       console.log('Install failed');
     })
   );
 });
 
-self.addEventListener('activate', function(event) {
+self.addEventListener('activate', (event) =>{
   event.waitUntil(
-    caches.keys().then(function(cache_names) {
+    caches.keys().then((cache_names)=> {
       return Promise.all(
-        cache_names.filter(function(name) {
-          if (cache_name_with_version == name || dynamic_cache_name == name)
-            return false;
-          else
-            return true;
-        }).map(function(name) {
+        cache_names.filter((name)=> {
+          return !(cache_name_with_version == name || dynamic_cache_name == name);
+        }).map((name) =>{
           return caches.delete(name);
         })
       );
@@ -78,38 +69,42 @@ self.addEventListener('activate', function(event) {
   );
 });
 
-self.addEventListener('fetch', function(event) {
+self.addEventListener('fetch', (event)=> {
   console.log(event.request.url);
+  let url_parsed = event.request.url.split('/');
+  console.log(url_parsed);
   event.respondWith(
     caches.match(event.request)
-      .then(function(response) {
-        return response || fetch(e.request); // NOTE: 다이나믹 캐싱 보안 이슈 존재 
-      })
-      .catch(error => {
-        return caches.open(cache_name_with_version)
-          .then(cache => {            
-            let accept_header = event.request.headers.get('accept');
+      .then((response)=> {
+        let url_parsed = event.request.url.split('/');
+        console.log(event.request.url)
+        
+        if (response){
+          return response;
+        } else if (url_parsed[1]=='github'){
+          if (url_parsed[2]=='auth') {
+            event.request.url = "https://api.github.com/user";
+            return fetch(e.request);
+          } else if (url_parsed[2]=='repos'){
+            event.request.url = github.get(event.request.url);
 
-            if (accept_header.includes('text/html')) {
-              return cache.match(offline_files.html);
-            } else if (accept_header.includes('application/json')) {
-              return cache.match(offline_files.json);
-            } else if (accept_header.includes('image/png') || accept_header.includes('image/jpeg')) {
-              return cache.match(offline_files.img);
-            } else {
-              return cache.match(offline_files.txt);
-            }
-          })          
-      })
+            return caches.open(dynamic_cache_name)
+              .then(cache => {
+                cache.put(event.request.url, res.clone());
+                return res;
+              });
+          }
+        } else {
+          return fetch(e.request);
+        }
+      }).catch(offline)
   );
 });
 
-self.addEventListener('sync', function(event) {
+self.addEventListener('sync', (event)=> {
   let argv = JSON.parse(event.tag);
   let [method, key] = argv;
   
-  IDXDB
-
   switch (method) {
     case 'syncTest':
       console.log('syncTest syncTest');
@@ -118,6 +113,38 @@ self.addEventListener('sync', function(event) {
   }
 });
 
-addEventListener('message', (event) => {
+self.addEventListener('message', (event) => {
+  switch (event.data.message){
+    case 'AuthOut':
+      event.waitUntil(
+        caches.keys().then((cache_names)=> {
+          return Promise.all(
+            cache_names.filter((name)=> {
+              return !(cache_name_with_version == name);
+            }).map((name) =>{
+              return caches.delete(name);
+            })
+          );
+        })
+      );      
+      break;
+  }
   console.log(`The client sent me a message: ${event.data}`);
 });
+
+function offline(error){
+  return caches.open(cache_name_with_version)
+  .then(cache => {            
+    let accept_header = event.request.headers.get('accept');
+
+    if (accept_header.includes('text/html')) {
+      return cache.match(offline_files.html);
+    } else if (accept_header.includes('application/json')) {
+      return cache.match(offline_files.json);
+    } else if (accept_header.includes('image/png') || accept_header.includes('image/jpeg')) {
+      return cache.match(offline_files.img);
+    } else {
+      return cache.match(offline_files.txt);
+    }
+  });        
+}

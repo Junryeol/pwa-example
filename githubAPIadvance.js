@@ -4,7 +4,7 @@ class Github{
         this.repos_name = "test";
 
         this.user_name = "";
-        this.authentication = "";        
+        this.authentication = "";
     }
 
     basicAuth(user_name_or_email, password) {
@@ -79,12 +79,10 @@ class Github{
     }
 
     get(address, params = {}) {
-        if (!params)
-            params = {};
         let query = Object.keys(params).map((key)=>{
-            return key + '=' + params[key]
+            return `${key}=${params[key]}`;
         }).join('&');
-        return this.restful('GET',address + "?" + query, null);
+        return this.restful('GET',`${address}?${query}`, null);
     }
     post(address, params){
         return this.restful('POST',address,params);
