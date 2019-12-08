@@ -28,7 +28,7 @@ class githubBackAPI {
       this.user_name = "";
       this.authorization = null;
       this.github_api_base_url = "https://api.github.com";
-      this.private_repos_name = "private_repos";
+      this.private_repos_name = "private-repos";
       this.file_system_path = "file_system.json";
   
       this.github_indexeddb = new IndexedDB(self.indexedDB, "github", "api");
@@ -39,30 +39,6 @@ class githubBackAPI {
   
     _fakeFetch(object) {
       return fetch(URL.createObjectURL(object));
-    }
-  
-    base64toBlob(b64Data, contentType, sliceSize) {
-      contentType = contentType || '';
-      sliceSize = sliceSize || 512;
-    
-      var byteCharacters = atob(b64Data);
-      var byteArrays = [];
-    
-      for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-        var slice = byteCharacters.slice(offset, offset + sliceSize);
-    
-        var byteNumbers = new Array(slice.length);
-        for (var i = 0; i < slice.length; i++) {
-          byteNumbers[i] = slice.charCodeAt(i);
-        }
-    
-        var byteArray = new Uint8Array(byteNumbers);
-    
-        byteArrays.push(byteArray);
-      }
-    
-      var blob = new Blob(byteArrays, {type: contentType});
-      return blob;
     }
   
     match(content, name) {

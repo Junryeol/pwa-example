@@ -1,17 +1,17 @@
 importScripts("/pwa-example/db.js");
 importScripts("/pwa-example/github_back_API.js");
-importScripts("/pwa-example/db.js");
 
 const cache_name = "github-storage";
 const cache_version = "v0.2";
 
 const root_directory = "/pwa-example";
 const manifest_file_name = "/manifest.json";
-const service_worker_file_name = "/sw.json";
+const service_worker_file_name = "/sw.js";
 const offline_file = "/offline.html";
 
 const static_cache_files = [
   "/",
+  "/index.html",
   "/login.html",
   "/index.js",
   "/style.css",
@@ -43,6 +43,7 @@ for (let [index, value] of static_cache_files.entries()) {
 }
 
 self.addEventListener("install", event => {
+  console.log(static_cache_files)
   event.waitUntil(
     caches
       .open(cache_name_with_version)
