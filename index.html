@@ -1,37 +1,26 @@
 <!DOCTYPE html>
-<html lang="en" dir="auto">
+<html lang="en">
   <head>
-    <meta charset="utf-8">
-    <link rel="icon" href="icon/fox-icon.png">
-    <title>github storage demo</title>
-    <script src="githubAPIadvance.js"></script>
-    <link href="style.css" rel="stylesheet">
-    <script src="db.js"></script>
-    <script src="index.js"></script><!-- defer -->
-    <link rel="manifest" href="manifest.json">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>reg sw</title>
   </head>
   <body>
-    <button id="home-add-button">Add to home screen</button>
-
-    <input id="user-id" type="text">
-    <input id="user-pw" type="password">
-    <button id="login-button" onclick="basicAuth()">github login</button>
-
-    <ul id="file-list">
-      
-    </ul>
-
-    <input id="files" type="file" multiple>
-    <button id="upload-button" onclick="upload()">file upload</button>
-
-    <input type="text">
-    <button id="download-button">file download</button>
-
-    <div id="log">
-
-    </div>
-
-    <!-- <script src="password.js"></script> -->
-
+    <a href="pwa-example/login.html">login page</a>
+    <script>
+      const service_worker =
+        "serviceWorker" in navigator
+          ? navigator.serviceWorker
+              .register("/pwa-example/sw.js")
+              .then(reg => {
+                console.log("Service Worker Registered:", reg);
+                return reg;
+              })
+              .catch(error => {
+                console.log("Service Worker Register failed: ", error);
+              })
+          : console.log("Service Worker Not Supported");
+    </script>
   </body>
 </html>

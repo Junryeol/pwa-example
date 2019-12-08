@@ -1,27 +1,9 @@
-window.indexedDB =
-  window.indexedDB ||
-  window.mozIndexedDB ||
-  window.webkitIndexedDB ||
-  window.msIndexedDB;
-
-window.IDBTransaction =
-  window.IDBTransaction ||
-  window.webkitIDBTransaction ||
-  window.msIDBTransaction;
-
-window.IDBKeyRange =
-  window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
-
-if (!window.indexedDB) {
-  console.log("Your browser doesn't support a stable version of IndexedDB.");
-}
-
 class IndexedDB {
-  constructor(db_name, object_store_name) {
+  constructor(indexedDB, db_name, object_store_name) {
     this.db_name = db_name;
     this.object_store_name = object_store_name;
 
-    let request = window.indexedDB.open(db_name);
+    let request = indexedDB.open(db_name);
 
     request.onerror = event => {
       console.log("error: ", event);

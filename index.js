@@ -3,17 +3,7 @@ function basicAuth() {
   let pw = document.getElementById("user-pw").value;
 
   github_front_API.basicAuth(id, pw).then(data => {
-    if (data.type == "User") {
-      github.getRoot().then(data => {
-        for (let el of data.tree) {
-          document.getElementById(
-            "file-list"
-          ).innerHTML += `<li>${el.path}</li>`;
-        }
-      });
-    } else {
-      alert("Worng ID or Password.");
-    }
+    console.log("github_front_API.basicAuth(id, pw)",data)
   });
 }
 
@@ -25,127 +15,6 @@ function upload() {
   }
 }
 
-class githubFrontAPI {
-  constructor() {
-    this.authorization = "";
-    this.user_name = "";
-    this.github_indexeddb = new IndexedDB("github", "api");
-  }
-
-  basicAuth(user_name_or_e_mail, password) {
-    this.authorization = new Headers({
-      Authorization: `Basic ${btoa(user_name_or_e_mail + ":" + password)}`
-    });
-    return this.authIn();
-  }
-  tokenAuth(token) {
-    this.authorization = new Headers({ Authorization: `Token ${token}` });
-    return this.authIn();
-  }
-  authIn() {
-    // service_worker.then((reg)=>{
-    //   reg.backgroundFetch.fetch("/github/auth", { //github/auth
-    //   method: "GET",
-    //   credentials: 'include',
-    //   headers: this.authorization
-    // }).then(data => {
-    //   this.user_name = data.login;
-    // })
-    // })
-
-    fetch("/pwa-example/github/auth", { //github/auth
-      method: "GET",
-      cache: 'default',
-      mode:'cors',
-      headers: this.authorization
-    });
-
-    return fetch("https://api.github.com/user", { //github/auth
-      method: "GET",
-      cache: 'default',
-      mode:'cors',
-      headers: this.authorization
-    }).then(data => {
-      this.user_name = data.login;
-    });
-  }
-  authOut() {
-    this.authorization = "";
-    localStorage.clear();
-    // TODO: background sync
-    service_worker.active.postMessage("authOut");
-  }
-
-  get(file_path) {
-    return fetch("/github/read", {
-      method: "get",
-      headers: this.authorization,
-      body: { file_path: file_path }
-    });
-  }
-  put(file_path, blob) {
-    return Promise(resolve => {
-      let reader = new FileReader();
-      reader.onloadend = () => {
-        resolve(reader.result);
-      };
-      reader.readAsDataURL(blob);
-    }).then(content => {
-      return fetch("/github/write", {
-        method: "post",
-        headers: this.authorization,
-        body: { file_path: file_path, content: content }
-      });
-    });
-  }
-  delete(file_path) {
-    return fetch("/github/remove", {
-      method: "delete",
-      headers: this.authorization,
-      body: { file_path: file_path }
-    });
-  }
-  copy(src_file_path, dst_file_path) {
-    return fetch("/github/copy", {
-      method: "put",
-      headers: this.authorization,
-      body: { src_file_path: src_file_path, dst_file_path: dst_file_path }
-    });
-  }
-  move(src_file_path, dst_file_path) {
-    return fetch("/github/move", {
-      method: "patch",
-      headers: this.authorization,
-      body: { src_file_path: src_file_path, dst_file_path: dst_file_path }
-    });
-  }
-
-  download(file_path) {
-    service_worker.ready.backgroundFetch.fetch("/github/read", {
-      method: "get",
-      headers: this.authorization,
-      body: { file_path: file_path }
-    });
-
-    // this.github_indexeddb.put(file_path, {method:'get', headers:this.authorization, file_path:file_path})
-    //   .then(()=>{
-    //     service_worker.ready.sync.register(file_path);
-    //   });
-  }
-  upload(file_path, file) {
-    service_worker.ready.backgroundFetch.fetch("/github/write", {
-      method: "post",
-      headers: this.authorization,
-      body: { file_path: file_path, file: file }
-    });
-    // this.github_indexeddb.put(file_path, {method:'post', headers:this.authorization, file_path:file_path, file:file})
-    //   .then(()=>{
-    //     service_worker.ready.sync.register.(file_path);
-    //   });
-  }
-}
-
-const github_front_API = new githubFrontAPI();
 const service_worker =
   "serviceWorker" in navigator
     ? navigator.serviceWorker

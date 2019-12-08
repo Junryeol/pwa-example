@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+  <head>
+    <meta charset="utf-8">
+    <link rel="icon" href="/pwa-example/icon/fox-icon.png">
+    <title>github storage demo</title>
+    <!-- <script src="/pwa-example/githubAPIadvance.js"></script> -->
+    <link href="/pwa-example/style.css" rel="stylesheet">
+    <script src="/pwa-example/db.js"></script>
+    <script src="/pwa-example/index.js"></script><!-- defer -->
+    <link rel="manifest" href="/pwa-example/manifest.json">
+  </head>
+  <body>
+    <button id="home-add-button">Add to home screen</button>
+
+    <input id="user-id" type="text">
+    <input id="user-pw" type="password">
+    <button id="login-button" onclick="basicAuth()">github login</button>
+
+    <ul id="file-list">
+      
+    </ul>
+
+    <input id="files" type="file" multiple>
+    <button id="upload-button" onclick="upload()">file upload</button>
+
+    <input type="text">
+    <button id="download-button">file download</button>
+
+    <div id="log">
+
+    </div>
+
+    <!-- <script src="password.js"></script> -->
+
+  </body>
+</html>
