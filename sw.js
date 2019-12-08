@@ -93,7 +93,7 @@ self.addEventListener("fetch", event => {
           return githubBackAPI.fetchAPI(event.request);
         } else {
           console.log(33333)
-          return response | fetch(event.request);
+          return response || fetch(event.request);
         }
       })
       .catch(error => {
