@@ -1,13 +1,14 @@
-window.indexedDB =
-  window.indexedDB ||
-  window.mozIndexedDB ||
-  window.webkitIndexedDB ||
-  window.msIndexedDB;
-
 class githubFrontAPI {
   constructor() {
     this.user_name = "";
-    this.github_indexeddb = new IndexedDB(window.indexedDB, "github", "api");
+    this.github_indexeddb = new IndexedDB(
+      window.indexedDB ||
+        window.mozIndexedDB ||
+        window.webkitIndexedDB ||
+        window.msIndexedDB,
+      "github",
+      "api"
+    );
   }
 
   basicAuth(user_name_or_e_mail, password) {
@@ -24,7 +25,12 @@ class githubFrontAPI {
       return response.json().then(data => {
         this.user_name = data.login;
         service_worker.then(reg => {
-          reg.active.postMessage(JSON.stringify({user_name:this.user_name,authorization:authorization}));
+          reg.active.postMessage(
+            JSON.stringify({
+              user_name: this.user_name,
+              authorization: authorization
+            })
+          );
         });
         return data;
       });
