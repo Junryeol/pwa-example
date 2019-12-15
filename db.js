@@ -11,7 +11,7 @@ class IndexedDB {
 
     request.onsuccess = event => {
       this.db = request.result;
-      console.log(this.db);
+      console.log("this.db",this.db);
     };
 
     request.onupgradeneeded = event => {
@@ -22,7 +22,7 @@ class IndexedDB {
   get(key) {
     return new Promise((resolve, reject) => {
       let request = this.db
-        .transaction([this.object_store_name])
+        .transaction([this.object_store_name],"readonly")
         .objectStore(this.object_store_name)
         .get(key);
 

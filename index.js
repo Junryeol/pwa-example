@@ -15,6 +15,18 @@ function upload() {
   }
 }
 
+function get() {
+  let path = document.getElementById("path").value;
+
+  github_front_API.get(path);
+}
+
+function download() {
+  let path = document.getElementById("path").value;
+
+  github_front_API.download(path);
+}
+
 const service_worker =
   "serviceWorker" in navigator
     ? navigator.serviceWorker

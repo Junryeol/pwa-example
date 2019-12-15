@@ -9,6 +9,18 @@ class githubFrontAPI {
       "github",
       "api"
     );
+    this.channel = new BroadcastChannel('github');
+    console.log(this.channel);
+    this.channel.onmessage = function(e) {
+      console.log('Received', e.data);
+
+      document.getElementById('file-list').innerHTML = ''
+      for (let content of e.data){
+        document.getElementById('file-list').innerHTML += `
+          <p>${content.name}</p>
+        `  
+      }
+    };
   }
 
   basicAuth(user_name_or_e_mail, password) {
@@ -22,6 +34,7 @@ class githubFrontAPI {
       method: "get",
       headers: new Headers({ Authorization: authorization })
     }).then(response => {
+
       return response.json().then(data => {
         this.user_name = data.login;
         service_worker.then(reg => {
@@ -42,26 +55,26 @@ class githubFrontAPI {
     });
   }
 
-  get(file_path) {
-    return fetch("/github", {
-      method: "get",
-      body: { file_path: file_path }
-    });
-  }
-  put(file_path, blob) {
-    return Promise(resolve => {
-      let reader = new FileReader();
-      reader.onloadend = () => {
-        resolve(reader.result);
-      };
-      reader.readAsDataURL(blob);
-    }).then(content => {
-      return fetch("/github", {
-        method: "post",
-        body: { file_path: file_path, content: content }
-      });
-    });
-  }
+  // get(file_path) {
+  //   return fetch("/github", {
+  //     method: "get",
+  //     body: { file_path: file_path }
+  //   });
+  // }
+  // put(file_path, blob) {
+  //   return Promise(resolve => {
+  //     let reader = new FileReader();
+  //     reader.onloadend = () => {
+  //       resolve(reader.result);
+  //     };
+  //     reader.readAsDataURL(blob);
+  //   }).then(content => {
+  //     return fetch("/github", {
+  //       method: "post",
+  //       body: { file_path: file_path, content: content }
+  //     });
+  //   });
+  // }
   delete(file_path) {
     return fetch("/github", {
       method: "delete",
@@ -81,7 +94,21 @@ class githubFrontAPI {
     });
   }
 
-  download(file_path) {
+  download(file_path){
+    this.github_indexeddb
+      .get(file_path).then((data)=>{
+        console.log(data)
+
+        let link = document.createElement("a");
+        link.download = data.file_path;
+        link.href = URL.createObjectURL(data.file);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      })
+  }
+
+  get(file_path) {
     this.github_indexeddb
       .put(file_path, {
         method: "get",
@@ -101,10 +128,14 @@ class githubFrontAPI {
         file: file
       })
       .then(() => {
+        console.log("ready")
         service_worker.then(reg => {
           reg.sync.register(file_path);
         });
       });
+  }
+  list(){
+
   }
 }
 
