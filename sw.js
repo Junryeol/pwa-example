@@ -2,14 +2,14 @@ importScripts("/pwa-example/db.js");
 importScripts("/pwa-example/github_back_API.js");
 
 const cache_name = "github-storage";
-const cache_version = "v0.3";
+const cache_version = "v0.4"; // TODO: github last commit 정보 받기
 
 const root_directory = "/pwa-example";
 const manifest_file_name = "/manifest.json";
 const service_worker_file_name = "/sw.js";
 const offline_file = "/offline.html";
 
-const static_cache_files = [
+const static_cache_files = [ // TODO: github 에서 목록 끌어오도록 변경
   // "/",
   // "/index.html",
   // "/login.html",
@@ -19,7 +19,7 @@ const static_cache_files = [
   // "/github_back_API.js",
   // "/github_front_API.js",
   // "/icon/fox-icon.png"
-]; // TODO: github 에서 목록 끌어오도록 변경
+]; 
 
 const static_cache_name = "static-" + cache_name;
 const dynamic_cache_name = "dynamic-" + cache_name;
@@ -81,13 +81,12 @@ self.addEventListener("fetch", event => {
     caches
       .match(event.request)
       .then(response => {
-        let url_parsed = event.request.url.split("/");
-
-        if (url_parsed.length > 4 && url_parsed[3] == "github") {
-          return githubBackAPI.fetchAPI(event.request);
-        } else {
-          return response || fetch(event.request);
-        }
+        // NOTE: YOU CAN MAKE PROXY
+        // let url_parsed = event.request.url.split("/");
+        // if (url_parsed.length > 4 && url_parsed[3] == "github")
+        //   return githubBackAPI.fetchAPI(event.request);
+        // else
+        return response || fetch(event.request);
       })
       .catch(error => {
         return caches.open(cache_name_with_version).then(cache => {
@@ -111,10 +110,12 @@ self.addEventListener("sync", event => {
 self.addEventListener("message", event => {
   let data = JSON.parse(event.data);
 
-  console.log("msg",data.user_name,data.authorization)
+  if (data.user_name != github_back_API.user_name){
+    github_back_API.auth(data.user_name,new Headers({ Authorization: data.authorization}));
+    // TODO: indexeddb 초기화, filesystem 초기화
+  }
 
-  github_back_API.auth(data.user_name,data.authorization);
-
+  // TODO: thumbnail은 캐시에 
   event.waitUntil(
     caches.keys().then(cache_names => {
       return Promise.all(

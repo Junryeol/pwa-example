@@ -1,5 +1,5 @@
 class githubFrontAPI {
-  constructor() {
+  constructor(listUpdateCallback) {
     this.user_name = "";
     this.github_indexeddb = new IndexedDB(
       window.indexedDB ||
@@ -10,17 +10,7 @@ class githubFrontAPI {
       "api"
     );
     this.channel = new BroadcastChannel('github');
-    console.log(this.channel);
-    this.channel.onmessage = function(e) {
-      console.log('Received', e.data);
-
-      document.getElementById('file-list').innerHTML = ''
-      for (let content of e.data){
-        document.getElementById('file-list').innerHTML += `
-          <p>${content.name}</p>
-        `  
-      }
-    };
+    this.channel.onmessage = listUpdateCallback;
   }
 
   basicAuth(user_name_or_e_mail, password) {
@@ -32,18 +22,16 @@ class githubFrontAPI {
   authIn(authorization) {
     return fetch("https://api.github.com/user", {
       method: "get",
-      headers: new Headers({ Authorization: authorization })
+      headers: new Headers({ Authorization: authorization})
     }).then(response => {
 
       return response.json().then(data => {
         this.user_name = data.login;
         service_worker.then(reg => {
-          reg.active.postMessage(
-            JSON.stringify({
-              user_name: this.user_name,
-              authorization: authorization
-            })
-          );
+          reg.active.postMessage(JSON.stringify({
+            user_name: this.user_name,
+            authorization: authorization
+          }));
         });
         return data;
       });
@@ -55,59 +43,19 @@ class githubFrontAPI {
     });
   }
 
-  // get(file_path) {
-  //   return fetch("/github", {
-  //     method: "get",
-  //     body: { file_path: file_path }
-  //   });
-  // }
-  // put(file_path, blob) {
-  //   return Promise(resolve => {
-  //     let reader = new FileReader();
-  //     reader.onloadend = () => {
-  //       resolve(reader.result);
-  //     };
-  //     reader.readAsDataURL(blob);
-  //   }).then(content => {
-  //     return fetch("/github", {
-  //       method: "post",
-  //       body: { file_path: file_path, content: content }
-  //     });
-  //   });
-  // }
-  delete(file_path) {
-    return fetch("/github", {
-      method: "delete",
-      body: { file_path: file_path }
-    });
-  }
-  copy(src_file_path, dst_file_path) {
-    return fetch("/github", {
-      method: "put",
-      body: { src_file_path: src_file_path, dst_file_path: dst_file_path }
-    });
-  }
-  move(src_file_path, dst_file_path) {
-    return fetch("/github", {
-      method: "patch",
-      body: { src_file_path: src_file_path, dst_file_path: dst_file_path }
-    });
-  }
-
-  download(file_path){
+  upload(file_path, file) {
     this.github_indexeddb
-      .get(file_path).then((data)=>{
-        console.log(data)
-
-        let link = document.createElement("a");
-        link.download = data.file_path;
-        link.href = URL.createObjectURL(data.file);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+      .put(file_path, {
+        method: "post",
+        file_path: file_path,
+        file: file
       })
+      .then(() => {
+        service_worker.then(reg => {
+          reg.sync.register(file_path);
+        });
+      });
   }
-
   get(file_path) {
     this.github_indexeddb
       .put(file_path, {
@@ -120,23 +68,36 @@ class githubFrontAPI {
         });
       });
   }
-  upload(file_path, file) {
+  download(file_path){
+    // TODO: file system api 추가
+
     this.github_indexeddb
-      .put(file_path, {
-        method: "post",
-        file_path: file_path,
-        file: file
+      .get(file_path).then((data)=>{
+        let link = document.createElement("a");
+        link.download = data.file_path;
+        link.href = URL.createObjectURL(data.file);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       })
-      .then(() => {
-        console.log("ready")
-        service_worker.then(reg => {
-          reg.sync.register(file_path);
-        });
-      });
   }
-  list(){
 
-  }
+  // delete(file_path) {
+  //   return fetch("/github", {
+  //     method: "delete",
+  //     body: { file_path: file_path }
+  //   });
+  // }
+  // copy(src_file_path, dst_file_path) {
+  //   return fetch("/github", {
+  //     method: "put",
+  //     body: { src_file_path: src_file_path, dst_file_path: dst_file_path }
+  //   });
+  // }
+  // move(src_file_path, dst_file_path) {
+  //   return fetch("/github", {
+  //     method: "patch",
+  //     body: { src_file_path: src_file_path, dst_file_path: dst_file_path }
+  //   });
+  // }
 }
-
-const github_front_API = new githubFrontAPI();
