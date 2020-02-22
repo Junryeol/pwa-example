@@ -2,7 +2,7 @@ importScripts("/pwa-example/db.js");
 importScripts("/pwa-example/github_back_API.js");
 
 const cache_name = "github-storage";
-const cache_version = "v0.4"; // TODO: github last commit 정보 받기
+const cache_version = "v0.5"; // TODO: github last commit 정보 받기
 
 const root_directory = "/pwa-example";
 const manifest_file_name = "/manifest.json";
@@ -29,13 +29,7 @@ if (static_cache_files.includes(manifest_file_name)) {
   static_cache_files.splice(static_cache_files.indexOf(manifest_file_name), 1);
 }
 if (static_cache_files.includes(service_worker_file_name)) {
-  static_cache_files.splice(
-    static_cache_files.indexOf(service_worker_file_name),
-    1
-  );
-}
-if (!static_cache_files.includes(offline_file)) {
-  static_cache_files.push(offline_file);
+  static_cache_files.splice(static_cache_files.indexOf(service_worker_file_name),1);
 }
 
 for (let [index, value] of static_cache_files.entries()) {
@@ -59,6 +53,8 @@ self.addEventListener("install", event => {
 });
 
 self.addEventListener("activate", event => {
+  // TODO: 로그인 여부 전달하기
+
   event.waitUntil(
     caches.keys().then(cache_names => {
       return Promise.all(

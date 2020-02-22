@@ -72,13 +72,31 @@ class githubFrontAPI {
     // TODO: file system api 추가
 
     this.github_indexeddb
-      .get(file_path).then((data)=>{
+      .get(file_path).then(async (data)=>{
         let link = document.createElement("a");
+        console.log(data)
         link.download = data.file_path;
-        link.href = URL.createObjectURL(data.file);
+
+        if(data.shas.length == 1){
+          let file = await this.github_indexeddb.get(data.shas[0])
+          link.href = URL.createObjectURL(file.file);
+        } else {
+          for (let index in data.shas){
+            console.log(data.shas[index])
+            let file = await this.github_indexeddb.get(data.shas[index])
+            console.log(file)
+            await file_system.put(data.file_path, file.file);
+            await this.github_indexeddb.delete(data.shas[index]); // TODO: 파일 시스템에 쓰면 지우기
+          }
+          data.file_system_url = await file_system.url(data.file_path);
+          console.log(data.file_system_url)
+          await this.github_indexeddb.put(data.file_path, data); // TODO: 파일 시스템 경로 추가하기
+          link.href = data.file_system_url;
+        }
+
         document.body.appendChild(link);
         link.click();
-        document.body.removeChild(link);
+        document.body.removeChild(link);  
       })
   }
 

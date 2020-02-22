@@ -120,23 +120,29 @@ class githubBackAPI {
   async get(content) {
     let files = [];
 
-    for (let sha of content.shas) {
-      let blob = await fetch(`${this.blobs_url}/${sha}`, {
+    for (let key in content.shas) {
+      let blob = await fetch(`${this.blobs_url}/${content.shas[key]}`, {
         method: "get",
         headers: this.headers
       }).then(async data => {
         let json = await data.json();
+
+        console.log(json.content.substr(0,"data:application/octet-stream;base64,".length*2));
+
         return await fetch(
-          "data:" + content.type + ";base64," + json.content
+          "data:application/octet-stream;base64," + json.content
         ).then(async res => {
           return await res.blob();
         });
       });
 
-      files.push(blob);
+      console.log(blob)
+
+      this.github_indexeddb.put(content.shas[key], {
+        file: blob
+      });
     }
 
-    console.log(files);
     return files;
   }
 
@@ -149,15 +155,13 @@ class githubBackAPI {
         switch (data.method) {
           case "get":
             let content = this.read(data.file_path);
-            let files = await this.get(content);
-            let blob = new Blob(files, { type: content.type });
+            let files = await this.get(content); // TODO: 파일 따로 담기 여기에 포함
 
-            this.github_indexeddb.put(data.file_path, {
+            this.github_indexeddb.put(data.file_path, { // TODO: 파일 키 담기
               file_path: data.file_path,
-              file: blob
+              file_type: content.type,
+              shas: content.shas
             });
-
-            console.log(blob);
             break;
 
           case "post":
@@ -241,7 +245,7 @@ class githubBackAPI {
     });
   }
 
-  write(path, shas = [], type = "text/plain") {
+  write(path, shas = {}, type = "text/plain") {
     let dir_path = path.split("/");
     let file_name = dir_path.pop();
 
@@ -299,7 +303,8 @@ class githubBackAPI {
   }
 
   async upload(file) {
-    let shas = [];
+    let index = 0;
+    let shas = {};
     let read_size = 0;
 
     while (read_size != file.size) {
@@ -309,15 +314,20 @@ class githubBackAPI {
       let result = await new Promise(resolve => {
         let fileReader = new FileReader();
         fileReader.onload = e => resolve(fileReader.result);
+        console.log(file.slice(read_size, read_size + buffer_size))
         fileReader.readAsDataURL(
           file.slice(read_size, read_size + buffer_size)
         );
       });
 
+      console.log(result.substr(0,"data:application/octet-stream;base64,".length*2));
+
       let content = result.substr(
         "data:application/octet-stream;base64,".length,
         result.length
       );
+
+
 
       let response = await fetch(this.blobs_url, {
         method: "post",
@@ -326,7 +336,8 @@ class githubBackAPI {
       });
 
       let json = await response.json();
-      shas.push(json.sha);
+      shas[index] = json.sha;
+      index++;
 
       read_size += buffer_size;
     }
